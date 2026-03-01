@@ -86,6 +86,14 @@ TEST(UrlTest, AllowsNonWebsocketScheme)
     EXPECT_EQ(parsed.port_number(), std::nullopt);
 }
 
+TEST(UrlTest, AllowsSchemeWithPlusDashAndDot)
+{
+    url parsed("a+b-c.d://host");
+
+    EXPECT_EQ(parsed.scheme(), "a+b-c.d");
+    EXPECT_EQ(parsed.host_address(), "host");
+}
+
 TEST(UrlTest, ThrowsInvalidArgumentForMalformedUrls)
 {
     EXPECT_THROW(url(""), std::invalid_argument);
@@ -104,9 +112,33 @@ TEST(UrlTest, StrictRejectsNonNumericPortToken)
     EXPECT_THROW(url("ws://h:abc"), std::invalid_argument);
 }
 
+TEST(UrlTest, StrictRejectsSchemeStartingWithNonAlphabeticCharacter)
+{
+    EXPECT_THROW(url("1ws://host"), std::invalid_argument);
+}
+
+TEST(UrlTest, StrictRejectsSchemeCharacterOutsideAllowedSet)
+{
+    EXPECT_THROW(url("w^://host"), std::invalid_argument);
+}
+
 TEST(UrlTest, StrictRejectsOutOfRangePort)
 {
     EXPECT_THROW(url("ws://h:70000"), std::invalid_argument);
+}
+
+TEST(UrlTest, StrictRejectsInvalidHostPercentEncoding)
+{
+    EXPECT_THROW(url("ws://host%"), std::invalid_argument);
+    EXPECT_THROW(url("ws://host%2"), std::invalid_argument);
+    EXPECT_THROW(url("ws://host%2G"), std::invalid_argument);
+}
+
+TEST(UrlTest, AcceptsValidHostPercentEncoding)
+{
+    url parsed("ws://host%2Dname");
+
+    EXPECT_EQ(parsed.host_address(), "host%2Dname");
 }
 
 TEST(UrlTest, StrictRejectsSpacesInHostAndPath)
@@ -143,6 +175,12 @@ TEST(UrlTest, StrictRejectsIpv4LeadingZeroOctet)
     EXPECT_THROW(url("ws://1.02.3.4"), std::invalid_argument);
 }
 
+TEST(UrlTest, StrictRejectsIpv4TrailingDotAndTooLongOctet)
+{
+    EXPECT_THROW(url("ws://1.2.3.4."), std::invalid_argument);
+    EXPECT_THROW(url("ws://1234.1.1.1"), std::invalid_argument);
+}
+
 TEST(UrlTest, StrictRejectsMalformedIpLiterals)
 {
     EXPECT_THROW(url("ws://[:::]"), std::invalid_argument);
@@ -151,12 +189,28 @@ TEST(UrlTest, StrictRejectsMalformedIpLiterals)
     EXPECT_THROW(url("ws://[fe80::1%eth0]"), std::invalid_argument);
 }
 
+TEST(UrlTest, StrictRejectsMalformedIpvFutureAndZoneIdentifierDetails)
+{
+    EXPECT_THROW(url("ws://[v1.a^b]"), std::invalid_argument);
+    EXPECT_THROW(url("ws://[v12.]"), std::invalid_argument);
+    EXPECT_THROW(url("ws://[fe80::1%25]"), std::invalid_argument);
+    EXPECT_THROW(url("ws://[fe80::1%25eth0%25again]"), std::invalid_argument);
+    EXPECT_THROW(url("ws://[fe80::1%25eth{0]"), std::invalid_argument);
+}
+
 TEST(UrlTest, AcceptsIpv6ZoneIdentifierWhenPercentEncoded)
 {
     url parsed("ws://[fe80::1%25eth0]/stream");
 
     EXPECT_EQ(parsed.host_address(), "fe80::1%25eth0");
     EXPECT_EQ(parsed.path(), "/stream");
+}
+
+TEST(UrlTest, AcceptsUppercaseIpvFuturePrefix)
+{
+    url parsed("ws://[V1.alpha:beta]");
+
+    EXPECT_EQ(parsed.host_address(), "V1.alpha:beta");
 }
 
 TEST(UrlTest, AllowsMixedDottedHostAsRegName)
@@ -178,4 +232,16 @@ TEST(UrlTest, AcceptsValidPercentEncoding)
     url parsed("ws://host/a%20b");
 
     EXPECT_EQ(parsed.path(), "/a%20b");
+}
+
+TEST(UrlTest, AcceptsPathReservedCharacters)
+{
+    url parsed("ws://host/a:b@c");
+
+    EXPECT_EQ(parsed.path(), "/a:b@c");
+}
+
+TEST(UrlTest, StrictRejectsPathCharactersOutsideAllowedSet)
+{
+    EXPECT_THROW(url("ws://host/a^b"), std::invalid_argument);
 }

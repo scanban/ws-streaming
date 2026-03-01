@@ -20,6 +20,8 @@ wss::detail::semver::try_parse(const std::string& str)
     std::string major_str = str.substr(0, a);
     std::string minor_str = str.substr(a + 1, b - a - 1);
     std::string revision_str = str.substr(b + 1);
+    if (major_str.empty() || minor_str.empty() || revision_str.empty())
+        return std::nullopt;
 
     char *end;
 

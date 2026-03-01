@@ -1,6 +1,8 @@
 #include <array>
 #include <cstdint>
+#include <iterator>
 #include <list>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -10,6 +12,85 @@
 
 using namespace testing;
 using namespace wss::detail;
+
+namespace
+{
+    class ThrowingInputIterator
+    {
+    public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = char;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const char*;
+        using reference = const char&;
+
+        ThrowingInputIterator(
+            const char* ptr,
+            bool throw_on_deref,
+            bool throw_on_increment,
+            bool throw_on_copy = false)
+            : ptr_(ptr),
+              throw_on_deref_(throw_on_deref),
+              throw_on_increment_(throw_on_increment),
+              throw_on_copy_(throw_on_copy)
+        {
+        }
+
+        ThrowingInputIterator(const ThrowingInputIterator& other)
+            : ptr_(other.ptr_),
+              throw_on_deref_(other.throw_on_deref_),
+              throw_on_increment_(other.throw_on_increment_),
+              throw_on_copy_(other.throw_on_copy_)
+        {
+            if (throw_on_copy_)
+            {
+                throw std::runtime_error("copy failed");
+            }
+        }
+
+        reference operator*() const
+        {
+            if (throw_on_deref_)
+            {
+                throw std::runtime_error("dereference failed");
+            }
+            return *ptr_;
+        }
+
+        ThrowingInputIterator& operator++()
+        {
+            if (throw_on_increment_)
+            {
+                throw std::runtime_error("increment failed");
+            }
+            ++ptr_;
+            return *this;
+        }
+
+        ThrowingInputIterator operator++(int)
+        {
+            auto copy = *this;
+            ++(*this);
+            return copy;
+        }
+
+        friend bool operator==(const ThrowingInputIterator& lhs, const ThrowingInputIterator& rhs)
+        {
+            return lhs.ptr_ == rhs.ptr_;
+        }
+
+        friend bool operator!=(const ThrowingInputIterator& lhs, const ThrowingInputIterator& rhs)
+        {
+            return !(lhs == rhs);
+        }
+
+    private:
+        const char* ptr_;
+        bool throw_on_deref_;
+        bool throw_on_increment_;
+        bool throw_on_copy_;
+    };
+}
 
 TEST(Base64, CharStrings)
 {
@@ -89,4 +170,33 @@ TEST(Base64, HighBitCharBytes)
 
     EXPECT_EQ(base64(std::vector<char>{ static_cast<char>(0xFF) }), "/w==");
     EXPECT_EQ(base64(high_bit_chars), base64(bytes));
+}
+
+TEST(Base64, PropagatesIteratorExceptions)
+{
+    const std::array<char, 2> bytes{ 'f', 'o' };
+
+    EXPECT_THROW(
+        base64(
+            ThrowingInputIterator(bytes.data(), true, false),
+            ThrowingInputIterator(bytes.data() + bytes.size(), false, false)),
+        std::runtime_error);
+
+    EXPECT_THROW(
+        base64(
+            ThrowingInputIterator(bytes.data(), false, true),
+            ThrowingInputIterator(bytes.data() + bytes.size(), false, false)),
+        std::runtime_error);
+
+    EXPECT_THROW(
+        base64(
+            ThrowingInputIterator(bytes.data(), false, false, true),
+            ThrowingInputIterator(bytes.data() + bytes.size(), false, false)),
+        std::runtime_error);
+
+    EXPECT_THROW(
+        base64(
+            ThrowingInputIterator(bytes.data(), false, false),
+            ThrowingInputIterator(bytes.data() + bytes.size(), false, false, true)),
+        std::runtime_error);
 }

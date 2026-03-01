@@ -139,6 +139,11 @@ namespace
         // RFC 6874 IPv6 zone identifiers must be percent-encoded as "%25"
         std::string_view address_part = host;
         const std::size_t zone_sep = host.find("%25");
+        const std::size_t raw_percent = host.find('%');
+
+        if (raw_percent != std::string_view::npos && zone_sep == std::string_view::npos)
+            return false;
+
         if (zone_sep != std::string_view::npos)
         {
             if (host.find("%25", zone_sep + 3) != std::string_view::npos)
