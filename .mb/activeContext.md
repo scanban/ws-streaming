@@ -1,8 +1,8 @@
 # Active Context
 
 ## Current Focus
-Build and test instrumentation updates (sanitizers + coverage wiring) and
-memory-bank alignment with current repo governance rules.
+Parser/protocol hardening, module-level coverage checks, and memory-bank
+alignment with committed repository state.
 
 ## Repository Snapshot
 - Top-level project: `ws-streaming` version `3.0.2`.
@@ -10,21 +10,22 @@ memory-bank alignment with current repo governance rules.
 - Optional build targets: examples and tests.
 
 ## Recent Changes
-- Added CMake option `WS_STREAMING_ENABLE_SANITIZERS` in root `CMakeLists.txt`.
-- Added `cmake/sanitizers.cmake` with GNU-only guard and target helper
-  `ws_streaming_enable_sanitizers_for_target(...)`.
-- Applied sanitizer helper to library target in `src/CMakeLists.txt`.
-- Applied sanitizer helper to test executables in `tests/CMakeLists.txt`.
-- Wired coverage module include in `tests/CMakeLists.txt` behind
-  `WS_STREAMING_ENABLE_COVERAGE`.
-- Added README section for sanitized test builds.
-- Added repo governance instructions via `AGENTS.md` and commit policy in
-  `COMMIT_STYLE.md`.
+- Added top-level CMake option `WS_STREAMING_ENABLE_COVERAGE` and root-level
+  include of `cmake/coverage.cmake` when enabled.
+- Added `cmake/check_lcov_thresholds.cmake` and
+  `cmake/clear_coverage_data.cmake` to support module-specific coverage checks.
+- Added custom test coverage targets:
+  `coverage-check-websocket_protocol`, `coverage-check-url`,
+  `coverage-check-semver`.
+- Hardened WebSocket protocol helpers for null-pointer inputs and added
+  `tests/test_websocket_protocol.cpp`.
+- Hardened semver and URL parsing edge cases and expanded parser/base64 tests.
 
 ## Next Steps
-- Keep `.mb/*.md` synchronized with in-flight CMake and README changes.
-- Clarify and document top-level governance for coverage option usage so test
-  coverage wiring is consistently configured.
+- Keep `.mb/*.md` synchronized with future CMake and test evolution.
+- Track and resolve remaining uncommitted governance/meta files
+  (`AGENTS.md`, `.mb/systemPatterns.md`, `.mb/techContext.md`, `.gitignore`,
+  `.clang-format`, `DOCUMENTATION_GUIDE.md`) when ready.
 - Continue updating `activeContext.md` and `progress.md` first during each
   implementation session.
 

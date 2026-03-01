@@ -28,17 +28,28 @@
   - `cmake/sanitizers.cmake` defines
     `ws_streaming_enable_sanitizers_for_target(<target>)`.
   - Root CMake includes the module once; individual target files opt in.
-  - Current tree applies this helper to the library target and each unit-test
-    executable target.
+  - Current tree applies this helper to each unit-test executable target.
 - Coverage helper:
   - `cmake/coverage.cmake` defines `enable_coverage_for_target(<target>)`.
-  - Tests include the module conditionally and enable coverage flags only when
+  - Root `CMakeLists.txt` includes the module conditionally when
+    `WS_STREAMING_ENABLE_COVERAGE` is enabled.
+  - Coverage flags are enabled for library and test targets only when coverage
     tools are detected.
+  - `tests/CMakeLists.txt` defines module-level coverage check targets:
+    `coverage-check-websocket_protocol`, `coverage-check-url`, and
+    `coverage-check-semver`.
 - Compiler constraint:
   - Sanitizer mode is currently guarded for GNU compilers in this repository
     state.
 
 ## Code Quality Constraints
+
+### Priorities
+1. Correctness & robustness (no UB, consistent error handling)
+2. Maintainability (clarity > cleverness)
+3. Resource awareness (CPU/memory/IO)
+4. maximum portability between different compilers
+5. strict C++ standard conforming
 
 ### Forbidden
 - Undefined behavior
@@ -82,6 +93,10 @@ Exclude:
 - Entire repo scans during module work
 
 ## Test Generation Rules
+- **Never** change tests if code to be tested contain bugs
+- When creating tests **always** check code to be tested for bugs and if found - suggest patch(es)
+- Emphasize malformed-input, null-input, and truncation-path coverage for
+  parser/protocol utilities.
 
 ### Framework
 All tests must use Google Test.
@@ -107,7 +122,10 @@ All tests must use Google Test.
 - Prefer StrictMock unless behavior is intentionally flexible
 - Avoid over-specified expectations
 
-### Coverage Policy
+### Test Coverage Policy
+- check coverage only for tests
+- do not add checking coverage to CMakeLists.txt
+
 **Minimum thresholds**
 - Line coverage ≥ 85%
 - Branch coverage ≥ 80%

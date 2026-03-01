@@ -12,11 +12,15 @@
 - GoogleTest >= 1.17.0 (for tests)
 - Threads (via CMake)
 
+## Git specific
+- Never try or suggest to push to upstream repository
+
 ## Build and Run
 
 ### testing and devlopment
 - Configure: `cmake -B {build directory} -DWS_STREAMING_BUILD_TESTS=ON -DWS_STREAMING_INSTALL=OFF -DWS_STREAMING_BUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Debug`
 - Build: `cmake --build {build directory} --parallel`
+
 ### Production
 - Configure: `cmake -B {build directory} -DWS_STREAMING_BUILD_TESTS=OFF -DWS_STREAMING_INSTALL=OFF -DWS_STREAMING_BUILD_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release`
 - Install: `cmake --install {build directory}` (when install constraints are met)
@@ -25,6 +29,7 @@
 - `WS_STREAMING_BUILD_EXAMPLES`
 - `WS_STREAMING_BUILD_TESTS`
 - `WS_STREAMING_ENABLE_SANITIZERS`
+- `WS_STREAMING_ENABLE_COVERAGE`
 - `WS_STREAMING_IGNORE_INSTALLED_BOOST`
 - `WS_STREAMING_INSTALL`
 
@@ -39,17 +44,20 @@
   - Guarded to GNU compiler in current working tree; non-GNU with the option
     enabled triggers a CMake fatal error.
 - Current target coverage:
-  - Library target in `src/CMakeLists.txt`
   - Test executables in `tests/CMakeLists.txt`
 
 ### Coverage
 - Module: `cmake/coverage.cmake`
-- Current wiring: included from `tests/CMakeLists.txt` when
+- Current wiring: included from root `CMakeLists.txt` when
   `WS_STREAMING_ENABLE_COVERAGE` is enabled.
-- Test executables conditionally call `enable_coverage_for_target(...)` when
-  coverage tools are detected.
-- Note: this is present in working-tree state and should be treated as
-  in-progress configuration until fully normalized in top-level option docs.
+- Library and test targets conditionally call
+  `enable_coverage_for_target(...)` when coverage tools are detected.
+- Module-specific threshold checks are provided by
+  `coverage-check-websocket_protocol`, `coverage-check-url`, and
+  `coverage-check-semver`.
+- Threshold policy in checks:
+  - line coverage >= 85%
+  - branch coverage >= 80%
 
 ### Sanitized Test Build
 - Configure:
