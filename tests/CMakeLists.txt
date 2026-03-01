@@ -1,6 +1,7 @@
 set(sources
     ./test_base64.cpp
     ./test_semver.cpp
+    ./test_url.cpp
 )
 
 if(WS_STREAMING_ENABLE_COVERAGE)
