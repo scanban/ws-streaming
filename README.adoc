@@ -71,9 +71,19 @@ The following CMake options are supported, and their values can be set by adding
 | Option                                | Description                       | Default
 | `WS_STREAMING_BUILD_EXAMPLES`         | Build example programs            | `ON` if top-level project
 | `WS_STREAMING_BUILD_TESTS`            | Build unit tests                  | `ON` if top-level project
+| `WS_STREAMING_ENABLE_SANITIZERS`      | Enable ASan+UBSan (GNU only)      | `OFF`
 | `WS_STREAMING_IGNORE_INSTALLED_BOOST` | Always fetch Boost                | `OFF`
 | `WS_STREAMING_INSTALL`                | Generate CMake install targets    | `ON`
 |=======================
+
+=== Sanitized Test Build
+
+To build and run tests with AddressSanitizer and UndefinedBehaviorSanitizer:
+
+[source,bash]
+cmake -B build -DWS_STREAMING_BUILD_TESTS=ON -DWS_STREAMING_ENABLE_SANITIZERS=ON -DWS_STREAMING_BUILD_EXAMPLES=OFF -DWS_STREAMING_INSTALL=OFF
+cmake --build build
+ctest --test-dir build --output-on-failure
 
 == Using the Library in a Project
 
