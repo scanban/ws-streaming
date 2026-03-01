@@ -1,4 +1,6 @@
 #include <array>
+#include <cstdint>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -68,4 +70,23 @@ TEST(Base64, ByteVectors)
     EXPECT_EQ(base64(std::vector<std::uint8_t>{ 1 }), "AQ==");
     EXPECT_EQ(base64(std::vector<std::uint8_t>{ 1, 2 }), "AQI=");
     EXPECT_EQ(base64(std::vector<std::uint8_t>{ 1, 2, 3 }), "AQID");
+}
+
+TEST(Base64, NonRandomAccessIterators)
+{
+    const std::list<char> chars{ 'f', 'o', 'o' };
+    EXPECT_EQ(base64(chars), "Zm9v");
+    EXPECT_EQ(base64(chars.cbegin(), chars.cend()), "Zm9v");
+}
+
+TEST(Base64, HighBitCharBytes)
+{
+    const std::vector<char> high_bit_chars{
+        static_cast<char>(0x80),
+        static_cast<char>(0xFF),
+    };
+    const std::vector<std::uint8_t> bytes{ 0x80, 0xFF };
+
+    EXPECT_EQ(base64(std::vector<char>{ static_cast<char>(0xFF) }), "/w==");
+    EXPECT_EQ(base64(high_bit_chars), base64(bytes));
 }

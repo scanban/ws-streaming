@@ -16,6 +16,8 @@ namespace wss::detail
      * @param begin An iterator to the first byte to encode.
      * @param end An iterator past the last byte to encode.
      *
+     * The iterator type is not required to support random-access operations.
+     *
      * @return A Base64 string representation of the specified bytes.
      */
     template <typename ConstIterator>
@@ -24,7 +26,7 @@ namespace wss::detail
         using namespace boost::archive::iterators;
         using It = base64_from_binary<transform_width<ConstIterator, 6, 8>>;
         auto tmp = std::string(It(begin), It(end));
-        return tmp.append((3 - (end - begin) % 3) % 3, '=');
+        return tmp.append((4 - tmp.size() % 4) % 4, '=');
     }
 
     /**
