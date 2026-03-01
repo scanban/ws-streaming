@@ -51,6 +51,7 @@ namespace wss::detail
          *
          * @param header A pointer to memory to populate with the header. The pointed-to area must
          *     be large enough to hold the largest possible header (MAX_HEADER_SIZE).
+         *     If this value is null, the function returns 0 and performs no writes.
          * @param opcode The WebSocket opcode.
          * @param flags A combination of WebSocket flag values.
          * @param payload_size The size of the payload in bytes.
@@ -60,6 +61,9 @@ namespace wss::detail
         inline std::size_t generate_header(std::uint8_t *header,
             unsigned opcode, unsigned flags, std::size_t payload_size)
         {
+            if (header == nullptr)
+                return 0;
+
             header[0] = static_cast<std::uint8_t>(opcode | flags);
             std::uint64_t payload_size_64 = payload_size;
 
@@ -112,7 +116,8 @@ namespace wss::detail
          * @param data A pointer to the WebSocket frame data. The data may be truncated; i.e., it
          *     is safe to call this function even if it's not known whether the data contains a
          *     complete and valid frame. In this case the returned decoded_header::header_size
-         *     member is set to 0 (see the Returns description).
+         *     member is set to 0 (see the Returns description). If this value is null, the
+         *     function returns an empty decoded_header with header_size set to 0.
          * @param size The size of the data pointed to by @p data in bytes.
          *
          * @return A decoded_header structure containing the values of the header's fields. If the

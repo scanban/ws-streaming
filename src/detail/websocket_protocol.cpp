@@ -13,6 +13,10 @@ wss::detail::websocket_protocol::decoded_header
 wss::detail::websocket_protocol::decode_header(const std::uint8_t *data, std::size_t size) noexcept
 {
     decoded_header header { };
+
+    if (data == nullptr)
+        return header;
+
     const std::uint8_t *data_begin = data;
 
     if (size < 2)
