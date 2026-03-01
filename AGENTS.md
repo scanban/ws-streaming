@@ -7,3 +7,6 @@
 
 ## Commit policy
 **ALWAYS use COMMIT_STYLE.md** when commiting work in this repository
+
+## Documenting code
+**ALWAYS use DOCUMENTATION_GUIDE.md** when documenting code
