@@ -5,10 +5,12 @@ project(ws-streaming VERSION 3.0.2 LANGUAGES CXX)
 option(WS_STREAMING_BUILD_EXAMPLES  "Build example programs"            ${PROJECT_IS_TOP_LEVEL})
 option(WS_STREAMING_BUILD_TESTS     "Build unit tests"                  ${PROJECT_IS_TOP_LEVEL})
 option(WS_STREAMING_INSTALL         "Generate CMake install targets"    ON)
+option(WS_STREAMING_ENABLE_SANITIZERS "Enable ASan+UBSan for library and tests (GNU only)" OFF)
 
 include(CMakePackageConfigHelpers)
 include(FetchContent)
 include(GNUInstallDirs)
+include(cmake/sanitizers.cmake)
 
 include(dependencies/Boost.cmake)
 include(dependencies/nlohmann_json.cmake)

@@ -71,6 +71,7 @@ set(headers
 
 add_library(${PROJECT_NAME} ${sources} ${headers})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+ws_streaming_enable_sanitizers_for_target(${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD                17
