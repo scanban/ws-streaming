@@ -50,6 +50,14 @@ TEST(UrlTest, ParsesIpv6AndStripsBrackets)
     EXPECT_EQ(with_port.path(), "/path");
 }
 
+TEST(UrlTest, ParsesIpvFutureHost)
+{
+    url parsed("ws://[v1.a-b:!$&'()*+,;=]");
+
+    EXPECT_EQ(parsed.host_address(), "v1.a-b:!$&'()*+,;=");
+    EXPECT_EQ(parsed.port_number(), std::nullopt);
+}
+
 TEST(UrlTest, ParsesIpv4WithoutPortOrPath)
 {
     url parsed("ws://127.0.0.1");
@@ -133,6 +141,22 @@ TEST(UrlTest, StrictRejectsIpv4LeadingZeroOctet)
 {
     EXPECT_THROW(url("ws://01.2.3.4"), std::invalid_argument);
     EXPECT_THROW(url("ws://1.02.3.4"), std::invalid_argument);
+}
+
+TEST(UrlTest, StrictRejectsMalformedIpLiterals)
+{
+    EXPECT_THROW(url("ws://[:::]"), std::invalid_argument);
+    EXPECT_THROW(url("ws://[vXYZ]"), std::invalid_argument);
+    EXPECT_THROW(url("ws://[%25eth0]"), std::invalid_argument);
+    EXPECT_THROW(url("ws://[fe80::1%eth0]"), std::invalid_argument);
+}
+
+TEST(UrlTest, AcceptsIpv6ZoneIdentifierWhenPercentEncoded)
+{
+    url parsed("ws://[fe80::1%25eth0]/stream");
+
+    EXPECT_EQ(parsed.host_address(), "fe80::1%25eth0");
+    EXPECT_EQ(parsed.path(), "/stream");
 }
 
 TEST(UrlTest, AllowsMixedDottedHostAsRegName)

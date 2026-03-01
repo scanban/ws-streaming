@@ -6,6 +6,9 @@
 #include <string>
 #include <string_view>
 
+#include <boost/asio/ip/address_v6.hpp>
+#include <boost/system/error_code.hpp>
+
 #include <ws-streaming/detail/url.hpp>
 
 namespace
@@ -109,26 +112,57 @@ namespace
         if (host.empty())
             return false;
 
-        for (std::size_t i = 0; i < host.size(); ++i)
+        // RFC 3986 IPvFuture: "v" 1*HEXDIG "." 1*(unreserved / sub-delims / ":")
+        if ((host[0] == 'v' || host[0] == 'V') && host.size() >= 4)
         {
-            unsigned char c = static_cast<unsigned char>(host[i]);
-
-            if (!is_ascii(c) || std::iscntrl(c) || std::isspace(c))
+            std::size_t i = 1;
+            std::size_t hex_start = i;
+            while (i < host.size() && is_hex(static_cast<unsigned char>(host[i])))
+                ++i;
+            if (i == hex_start || i >= host.size() || host[i] != '.')
                 return false;
 
-            if (c == '%')
+            ++i;
+            if (i >= host.size())
+                return false;
+
+            for (; i < host.size(); ++i)
             {
-                if (!validate_percent_encoded(host, i))
+                unsigned char c = static_cast<unsigned char>(host[i]);
+                if (!(is_unreserved(c) || is_sub_delim(c) || c == ':'))
                     return false;
-                continue;
             }
 
-            if (!(std::isalnum(c) || c == ':' || c == '.' || c == '-' || c == '_' || c == '~' ||
-                  is_sub_delim(c)))
-                return false;
+            return true;
         }
 
-        return true;
+        // RFC 6874 IPv6 zone identifiers must be percent-encoded as "%25"
+        std::string_view address_part = host;
+        const std::size_t zone_sep = host.find("%25");
+        if (zone_sep != std::string_view::npos)
+        {
+            if (host.find("%25", zone_sep + 3) != std::string_view::npos)
+                return false;
+
+            address_part = host.substr(0, zone_sep);
+            std::string_view zone_id = host.substr(zone_sep + 3);
+            if (zone_id.empty())
+                return false;
+
+            for (char ch : zone_id)
+            {
+                unsigned char c = static_cast<unsigned char>(ch);
+                if (!(is_unreserved(c) || is_sub_delim(c)))
+                    return false;
+            }
+        }
+
+        if (address_part.empty())
+            return false;
+
+        boost::system::error_code ec;
+        boost::asio::ip::make_address_v6(std::string(address_part), ec);
+        return !ec;
     }
 
     bool validate_path_and_suffix(std::string_view path)
