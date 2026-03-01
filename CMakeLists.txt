@@ -6,11 +6,15 @@ option(WS_STREAMING_BUILD_EXAMPLES  "Build example programs"            ${PROJEC
 option(WS_STREAMING_BUILD_TESTS     "Build unit tests"                  ${PROJECT_IS_TOP_LEVEL})
 option(WS_STREAMING_INSTALL         "Generate CMake install targets"    ON)
 option(WS_STREAMING_ENABLE_SANITIZERS "Enable ASan+UBSan for library and tests (GNU only)" OFF)
+option(WS_STREAMING_ENABLE_COVERAGE "Enable coverage reporting and checks for tests" OFF)
 
 include(CMakePackageConfigHelpers)
 include(FetchContent)
 include(GNUInstallDirs)
 include(cmake/sanitizers.cmake)
+if(WS_STREAMING_ENABLE_COVERAGE)
+    include(cmake/coverage.cmake)
+endif()
 
 include(dependencies/Boost.cmake)
 include(dependencies/nlohmann_json.cmake)
