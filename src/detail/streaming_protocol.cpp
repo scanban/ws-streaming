@@ -41,9 +41,17 @@ wss::detail::streaming_protocol::decode_header(
             return header;
 
         if (use_tcp_protocol)
-            header.payload_size = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+            header.payload_size =
+                (static_cast<std::uint32_t>(data[0]) << 24)
+                | (static_cast<std::uint32_t>(data[1]) << 16)
+                | (static_cast<std::uint32_t>(data[2]) << 8)
+                | static_cast<std::uint32_t>(data[3]);
         else
-            header.payload_size = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+            header.payload_size =
+                (static_cast<std::uint32_t>(data[3]) << 24)
+                | (static_cast<std::uint32_t>(data[2]) << 16)
+                | (static_cast<std::uint32_t>(data[1]) << 8)
+                | static_cast<std::uint32_t>(data[0]);
 
         data += sizeof(std::uint32_t);
         size -= sizeof(std::uint32_t);

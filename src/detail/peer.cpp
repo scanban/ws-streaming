@@ -264,11 +264,12 @@ void wss::detail::peer::process_buffer_ws()
 
         // Consume the handled frame by sliding the remaining data in the read buffer over
         // to the left. (Can't use std::memcpy() for this because the ranges overlap.)
+        const std::size_t bytes_consumed = header.header_size + header.payload_size;
         std::memmove(
             &_rx_buffer[0],
-            &_rx_buffer[header.header_size + header.payload_size],
-            _rx_buffer_bytes - header.header_size + header.payload_size);
-        _rx_buffer_bytes -= header.header_size + header.payload_size;
+            &_rx_buffer[bytes_consumed],
+            _rx_buffer_bytes - bytes_consumed);
+        _rx_buffer_bytes -= bytes_consumed;
     }
 
     // If the read buffer is still full after processing, it is an error condition
@@ -383,8 +384,14 @@ void wss::detail::peer::process_metadata_packet(
 
     std::uint32_t encoding =
         _use_tcp_protocol
-            ? (data[3] | (data[2] << 8) | (data[1] << 16) | (data[0] << 24))
-            : (data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
+            ? (static_cast<std::uint32_t>(data[3])
+                | (static_cast<std::uint32_t>(data[2]) << 8)
+                | (static_cast<std::uint32_t>(data[1]) << 16)
+                | (static_cast<std::uint32_t>(data[0]) << 24))
+            : (static_cast<std::uint32_t>(data[0])
+                | (static_cast<std::uint32_t>(data[1]) << 8)
+                | (static_cast<std::uint32_t>(data[2]) << 16)
+                | (static_cast<std::uint32_t>(data[3]) << 24));
 
     nlohmann::json metadata;
 
