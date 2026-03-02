@@ -2,6 +2,7 @@ set(sources
     ./test_base64.cpp
     ./test_linear_table.cpp
     ./test_semver.cpp
+    ./test_streaming_protocol.cpp
     ./test_url.cpp
     ./test_websocket_protocol.cpp
 )
@@ -117,6 +118,27 @@ if(WS_STREAMING_ENABLE_COVERAGE AND DEFINED COVERAGE_TOOLS_FOUND AND COVERAGE_TO
             -DMIN_BRANCH_PERCENT=80
             -P ${CMAKE_SOURCE_DIR}/cmake/check_lcov_thresholds.cmake
         COMMENT "Running linear_table tests and coverage threshold checks"
+        VERBATIM
+    )
+
+    add_custom_target(coverage-check-streaming_protocol
+        COMMAND ${CMAKE_COMMAND}
+            -DROOT_DIR=${CMAKE_BINARY_DIR}
+            -P ${CMAKE_SOURCE_DIR}/cmake/clear_coverage_data.cmake
+        COMMAND ${CMAKE_COMMAND} -E env CTEST_OUTPUT_ON_FAILURE=1
+            ${CMAKE_CTEST_COMMAND} --test-dir ${CMAKE_BINARY_DIR} -R test_streaming_protocol
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target coverage
+        COMMAND ${CMAKE_COMMAND}
+            -DLCOV_TOOL=${LCOV_TOOL}
+            -DCOVERAGE_INFO=${CMAKE_BINARY_DIR}/coverage.info.cleaned
+            -DMODULE_INFO=${CMAKE_BINARY_DIR}/streaming_protocol.info
+            -DSOURCE_FILE=${CMAKE_SOURCE_DIR}/src/detail/streaming_protocol.cpp
+            -DHEADER_FILE=${CMAKE_SOURCE_DIR}/include/ws-streaming/detail/streaming_protocol.hpp
+            -DMODULE_LABEL=streaming_protocol
+            -DMIN_LINE_PERCENT=85
+            -DMIN_BRANCH_PERCENT=80
+            -P ${CMAKE_SOURCE_DIR}/cmake/check_lcov_thresholds.cmake
+        COMMENT "Running streaming_protocol tests and coverage threshold checks"
         VERBATIM
     )
 endif()

@@ -10,6 +10,9 @@ wss::detail::streaming_protocol::decode_header(
     bool use_tcp_protocol) noexcept
 {
     decoded_header header { };
+    if (data == nullptr)
+        return header;
+
     const std::uint8_t *data_begin = data;
 
     if (size < sizeof(std::uint32_t))

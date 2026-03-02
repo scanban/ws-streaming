@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
 
@@ -69,19 +70,25 @@ namespace wss::detail
         inline std::size_t generate_header(std::uint8_t *header,
             unsigned signo, unsigned type, std::size_t payload_size)
         {
+            if (header == nullptr)
+                throw std::invalid_argument("Asked to generate a WebSocket Streaming Protocol packet header into null memory");
+
             if (payload_size < 256)
             {
-                reinterpret_cast<std::uint32_t *>(header)[0] = boost::endian::native_to_little<std::uint32_t>(
+                const std::uint32_t first_word = boost::endian::native_to_little<std::uint32_t>(
                     signo |
                     (static_cast<unsigned>(payload_size) << 20)
                     | (type << 28));
+                std::memcpy(header, &first_word, sizeof(first_word));
                 return sizeof(std::uint32_t);
             }
 
             else if (payload_size <= std::numeric_limits<std::uint32_t>::max())
             {
-                reinterpret_cast<std::uint32_t *>(header)[0] = boost::endian::native_to_little<std::uint32_t>(signo | (type << 28));
-                reinterpret_cast<std::uint32_t *>(header)[1] = boost::endian::native_to_little<std::uint32_t>(static_cast<std::uint32_t>(payload_size));
+                const std::uint32_t first_word = boost::endian::native_to_little<std::uint32_t>(signo | (type << 28));
+                const std::uint32_t second_word = boost::endian::native_to_little<std::uint32_t>(static_cast<std::uint32_t>(payload_size));
+                std::memcpy(header, &first_word, sizeof(first_word));
+                std::memcpy(header + sizeof(first_word), &second_word, sizeof(second_word));
                 return 2 * sizeof(std::uint32_t);
             }
 
