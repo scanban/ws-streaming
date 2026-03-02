@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install required software
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            gcc \
+            g++ \
+            cmake \
+            ninja-build \
+            pkg-config \
+            lcov \
+            libssl-dev \
+            zlib1g-dev \
+            libicu-dev
+
+      - name: Verify coverage tools
+        run: |
+          gcov --version
+          lcov --version
+          genhtml --version
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DWS_STREAMING_BUILD_TESTS=ON \
+            -DWS_STREAMING_BUILD_INTEGRATION_TESTS=OFF \
+            -DWS_STREAMING_ENABLE_SANITIZERS=ON \
+            -DWS_STREAMING_BUILD_EXAMPLES=OFF \
+            -DWS_STREAMING_INSTALL=OFF \
+            -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure --exclude-regex '^.*integration$'
