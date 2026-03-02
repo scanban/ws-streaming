@@ -180,3 +180,33 @@ TEST(StreamingProtocol, DecodeHeaderReturnsDefaultWhenExtendedPayloadIsIncomplet
     EXPECT_EQ(decoded.header_size, 0U);
     EXPECT_EQ(decoded.payload_size, 512U);
 }
+
+TEST(StreamingProtocol, DecodeHeaderParsesTcpExtendedLengthWithHighBitSetWithoutCompletingPacket)
+{
+    const std::array<std::uint8_t, 8> frame {
+        0x10, 0x0A, 0xBC, 0xDE,
+        0x80, 0x00, 0x00, 0x01
+    };
+
+    const auto decoded = streaming_protocol::decode_header(frame.data(), frame.size(), true);
+
+    EXPECT_EQ(decoded.header_size, 0U);
+    EXPECT_EQ(decoded.type, 1U);
+    EXPECT_EQ(decoded.signo, 0xABCDEU);
+    EXPECT_EQ(decoded.payload_size, 0x80000001U);
+}
+
+TEST(StreamingProtocol, DecodeHeaderParsesWebSocketExtendedLengthWithHighBitSetWithoutCompletingPacket)
+{
+    const std::array<std::uint8_t, 8> frame {
+        0xCD, 0xAB, 0x01, 0x20,
+        0x01, 0x00, 0x00, 0x80
+    };
+
+    const auto decoded = streaming_protocol::decode_header(frame.data(), frame.size(), false);
+
+    EXPECT_EQ(decoded.header_size, 0U);
+    EXPECT_EQ(decoded.type, 2U);
+    EXPECT_EQ(decoded.signo, 0x1ABCDU);
+    EXPECT_EQ(decoded.payload_size, 0x80000001U);
+}

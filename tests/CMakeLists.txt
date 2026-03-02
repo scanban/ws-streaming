@@ -1,6 +1,7 @@
 set(sources
     ./test_base64.cpp
     ./test_linear_table.cpp
+    ./test_peer_security_regressions.cpp
     ./test_semver.cpp
     ./test_streaming_protocol.cpp
     ./test_url.cpp
